@@ -1,1 +1,4 @@
 .idea
+note.txt
+bill_detector/frontend/static/frontend
+bill_detector/frontend/node_modules

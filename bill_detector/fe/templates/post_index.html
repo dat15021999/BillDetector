@@ -1,0 +1,8 @@
+{% if result %}
+    <p>{{result}}</p>
+    {% for item in result %}
+        <img src="{{ item.source }}" />
+    {% endfor %}
+{% else %}
+    <p>no images</p>
+{% endif %}
