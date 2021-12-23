@@ -1,93 +1,104 @@
 import React, { Component } from 'react'
 import ImageContext from '../../contexts/ImageContext'
-
 export default class ImageProvider extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            srcList: [],
-            nameList: [],
-            current_src: "https://cdn2.iconfinder.com/data/icons/document-34/200/358-512.png",
-            current_name: "Example.png",
-            current_reg_image: "",
-            reg_images:[]
+            images: [],
+            images_source: [],
+            images_content:[],
+            current_index: -1,
+            bills: [],
+            tooltip_data: '',
+            isLoading: false
         }
 
         this.addImages = this.addImages.bind(this)
         this.removeImages = this.removeImages.bind(this)
         this.updateImage = this.updateImage.bind(this)
-        this.removeAllImg = this.removeAllImg.bind(this)
-        this.recognizeImage = this.recognizeImage.bind(this)
+        this.detectImages = this.detectImages.bind(this)
+        this.changeLoadingStatus = this.changeLoadingStatus.bind(this)
+        this.setTooltipData =this.setTooltipData.bind(this)
     }
 
     addImages(e) {
         let current_files = e.target.files
+        let _bills = []
 
-        let _srclist = Array.from(current_files).map(
+        for (let i = 0; i < current_files.length; i++) {
+            _bills.push("Không phải hóa đơn!")
+        }
+
+        let _images_source = Array.from(current_files).map(
             (file) => URL.createObjectURL(file)
         )
-        let _namelist = Array.from(current_files).map(
+        let _images = Array.from(current_files).map(
             (file) => file.name
         )
 
         this.setState({
-            srcList: _srclist,
-            nameList: _namelist,
-            current_src: "https://cdn2.iconfinder.com/data/icons/document-34/200/358-512.png",
-            current_name: "Example.png"
+            images: _images,
+            images_source: _images_source,
+            bills: _bills,
+            current_index: 0,
         })
     }
 
     removeImages() {
         this.setState({
-            srcList: [],
-            nameList: [],
-            current_src: "https://cdn2.iconfinder.com/data/icons/document-34/200/358-512.png",
-            current_name: "Example.png"
+            images: [],
+            images_source: [],
+            bills: [],
+            current_index: -1,
         })
     }
 
     updateImage(e) {
         let me = e.target
         if (me.src != undefined) {
-            console.log(me.src)
             this.setState({
-                current_src: me.src,
-                current_name: me.alt
+                current_index: me.attributes[2].value,
             })
         }
-        console.log('current source', this.state.current_src)
     }
-
-    removeAllImg() {
+    
+    detectImages(images_source, name_images, images_content, bills) {
         this.setState({
-            srcList: [],
-            nameList: [],
-            current_src: "https://cdn2.iconfinder.com/data/icons/document-34/200/358-512.png",
-            current_name: "Example.png"
+            images_source: images_source,
+            images: name_images,
+            images_content: images_content,
+            bills: bills
         })
     }
 
-    recognizeImage(image_src) {
-        console.log(image_src)
+    changeLoadingStatus(status) {
         this.setState({
-            current_reg_image: image_src,
-            reg_images: [image_src]
+            isLoading: status
+        })
+    }
+
+    setTooltipData(tooltip_data) {
+        this.setState({
+            tooltip_data: tooltip_data
         })
     }
 
     render() {
         return(
             <ImageContext.Provider value={{
-                images: this.state.srcList,
-                names: this.state.nameList,
-                src: this.state.current_src,
-                name: this.state.current_name,
-                update: this.updateImage,
-                add: this.addImages,
+                images: this.state.images,
+                images_source: this.state.images_source,
+                images_content: this.state.images_content,
+                current_index: this.state.current_index,
+                bills: this.state.bills,
+                tooltip_data: this.state.tooltip_data,
+                isLoading: this.state.isLoading,
+                updateImage: this.updateImage,
+                addImages: this.addImages,
                 removeImages: this.removeImages,
-                removeAllImages: this.removeAllImg,
-                recognizeImage: this.recognizeImage
+                detectImages: this.detectImages,
+                changeLoadingStatus: this.changeLoadingStatus,
+                setTooltipData: this.setTooltipData
             }}>
                 {this.props.children}
             </ImageContext.Provider>

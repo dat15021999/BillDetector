@@ -35,7 +35,7 @@ html * {
     min-height: 150px;
 } */
 
-.button {
+/* .button {
     width: 120px;
     height: 37px;
     display: flex;
@@ -48,4 +48,4 @@ html * {
 
 .button:hover {
     background-color: rgba(71, 89, 126, 1);
-}
+} */

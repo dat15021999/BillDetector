@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import { Grid } from '@material-ui/core'
-import Photo from '../ImageComponent/Image'
 import ImageContext from '../../contexts/ImageContext'
 
 let active = '#96863f'
@@ -15,7 +14,7 @@ export default class ImageUploader extends Component {
         return <ImageContext.Consumer>
             {
                 context => <div style={styles.imagesUploader}>
-                    <div style={styles.header}>Danh sach anh</div>
+                    <div style={styles.header}>Danh sách ảnh</div>
                     <div style={styles.container}>
                         <Grid container spacing={2}>
                             {
@@ -23,10 +22,17 @@ export default class ImageUploader extends Component {
                                     (item, index) => (
                                         <Grid key={index} item xs={3} align='center' style={styles.gridItem}>
                                             <div className="image-frame" style={{ ...styles.imageFrame,
-                                                backgroundColor: item == context.src ? active : passive}}
-                                                onClick={context.update}
+                                                backgroundColor: index == context.current_index ? active : passive}}
+                                                onClick={context.updateImage}
                                             >
-                                                <Photo style={styles.imageDisplay} src={item} alt={context.names[index]} />
+                                                <img
+                                                    style={styles.imageDisplay}
+                                                    src={context.images_source[index]}
+                                                    alt={item}
+                                                    indx={index}
+                                                    description={context.bills[index]}
+                                                    content={context.images_content[index]}
+                                                />
                                             </div>
                                         </Grid>
                                     )
@@ -35,19 +41,22 @@ export default class ImageUploader extends Component {
                         </Grid>
                     </div>
                     <div style={styles.footer}>
-                        <div className="button" style={styles.imageButton}>
+                        <div className="button" style={styles.imageButton}
+                            htmlFor="files_uploader"
+                            // onClick={context.addImages}
+                        >
                             <input
-                                // style={styles.input}
+                                hidden
                                 accept="image/*"
-                                id="file"
+                                id="files_uploader"
                                 type="file"
                                 multiple
-                                onChange={context.add}
+                                onChange={context.addImages}
                             />
-                            <label>Them anh</label>
+                            <label htmlFor="files_uploader">Thêm ảnh</label>
                         </div>
-                        <div className="button" style={styles.imageButton} onClick={context.removeAllImages}>
-                            <label>Xoa anh</label>
+                        <div className="button" style={styles.imageButton} onClick={context.removeImages}>
+                            <label>Xóa ảnh</label>
                         </div>
                     </div>
                 </div>
@@ -106,11 +115,6 @@ const styles = {
     },
     
     imageDisplay: {
-        // display: 'block',
-        // width: '100%',
-        // height: 'auto',
-        // margin: 'auto',
-
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -135,9 +139,5 @@ const styles = {
         borderRadius: '10px',
         cursor: 'pointer',
         fontWeight: 'bold'
-    },
-
-    input: {
-        display: 'none',
-    },
+    }
 }

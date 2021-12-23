@@ -3,7 +3,6 @@ import { render } from "react-dom"
 import ImageInfo from './image_info/ImageInfo'
 import ImageUploader from './images_loader/ImageUploader'
 import ImageProvider from './providers/ImageProvider'
-import ModelProvider from './providers/ModelProvider'
 
 export default class App extends Component {
     constructor(props) {
@@ -12,14 +11,12 @@ export default class App extends Component {
 
     render() {
         return <div style={styles.mainLayout}>
-            <ModelProvider>
                 <div style={styles.content}>
                     <ImageProvider>
                         <ImageUploader />
                         <ImageInfo />
                     </ImageProvider>
                 </div>
-            </ModelProvider>
         </div>
     }
 }

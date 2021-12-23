@@ -1,43 +1,24 @@
 from django.http.response import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework import serializers
-from frontend.models import Photo
-from frontend.serializers import ImageSerializer
 import pytesseract
 import cv2 as cv
 import os
 from urllib.request import urlopen
 import numpy as np
 import json
+from imgurpython import ImgurClient
+import time
 
 base_path = os.path.dirname(__file__)
-from imgurpython import ImgurClient
 client = ImgurClient(client_id='dd9d6daefb1b7a8', client_secret='c8bb7e89fae8303c927e75801ec943330dd6998e')
-
-# from .Google import Create_Service
-# CLIENT_SECRET_FILE = "/home/datnt/Projects/Django/BillDetector/bill_detector/frontend/client_secrets.json"
-# API_NAME = 'drive'
-# API_VERSION = 'v3'
-# SCOPES = ['https://wwww.googleapis.com/auth/drive']
-# service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
-# print(dir(service))
 
 # Create your views here.
 def index(request, *args, **kwargs):
     return render(request, 'frontend/index.html')
 
 # @csrf_exempt
-def postRequest(request, *args, **kwargs):
-    if request.method == "POST":
-        return render(request, 'frontend/index.html')
-
-
-# @csrf_exempt
 def imageApi(request):
     if request.method == 'GET':
-        images = Photo.objects.all()
-        images_serializer = ImageSerializer(images, many=True)
         return render(request, 'frontend/index.html')
 
     elif request.method == 'POST':
@@ -45,30 +26,27 @@ def imageApi(request):
         images = json.loads(body_unicode)
         result = []
 
-        # image_data = JSONParser().parse(request)
-        # image_serializer = ImageSerializer(data=image_data)
-
         texts = image_process_ocr(images)
-        print('Uploading...')
+        start = time.time()
+        print('Detecting...')
         for i in range(len(images)):
             item = uploadImage(
                 client = client,
                 image_path = base_path + '/output/' + images[i],
-                # album="billdetector",
                 image_name = images[i],
-                description = "Hoa don" if isBill(texts[i]) else "Khong phai hoa don"
+                description = "Hóa đơn" if isBill(texts[i]) else "Không phải hóa đơn"
             )
             print(isBill(texts[i]))
             result.append(item)
-        
-        # if image_serializer.is_valid():
-        #     print('req', image_serializer.data)
-        # #     process OCR
-        # #     image_serializer.save()
-        #     return JsonResponse(image_serializer.data, safe=False)
-        # else:
-        #     return HttpResponse('Object is invalid!')
-        return JsonResponse(result, safe=False)
+        end = time.time()
+        print('Tổng thời gian:', end - start, 's trên {} yêu cầu'.format(len(images)))
+        return JsonResponse(
+            [
+                getLineBorder(images),
+                result
+            ],
+            safe=False
+        )
 
 def image_process_ocr(images):
     result = []
@@ -104,8 +82,6 @@ def url_to_image(url, readFlag=cv.IMREAD_COLOR):
 def uploadImage(client, image_path, image_name, description):
     
     config = {
-        # 'album': album,
-        # 'name': image_name,
         'title': image_name,
         'description': description
     }
@@ -115,3 +91,42 @@ def removeFilesInPath(mydir):
     filelist = [ f for f in os.listdir(mydir) ]
     for f in filelist:
         os.remove(os.path.join(mydir, f))
+
+def getLineBorder(images):
+    result = []
+    for image in images:
+        current_index = 0
+        img = cv.imread(base_path + '/input/' + image)
+        height, width, c = img.shape
+        # result.append(pytesseract.image_to_boxes(img))
+        lines = pytesseract.image_to_string(img).splitlines()
+        coordinates = pytesseract.image_to_boxes(img).splitlines()
+        # print(lines)
+        # print(coordinates)
+        image_lines = []
+        for line in lines:
+            collapse_string = line.replace(" ", "")
+            if collapse_string != '':
+                current_line = []
+                length = len(collapse_string)
+
+                while coordinates[current_index] == '~' or collapse_string[0] != coordinates[current_index][0] and collapse_string[-1] != coordinates[current_index + length - 1][0]:
+                    current_index += 1
+                start_char = coordinates[current_index].split(' ')
+                end_char = coordinates[current_index + length - 1].split(' ')
+
+                floor = start_char[2] if start_char[2] < end_char[2] else end_char[2]
+                floor = 1 - int(floor)/height
+
+                ceil = start_char[4] if start_char[4] > end_char[4] else end_char[4]
+                ceil = 1 - int(ceil)/height
+
+                current_line.append(line)
+                current_line.append(round(floor, 3))
+                current_line.append(round(ceil, 3))
+
+                image_lines.append(current_line)
+                current_index = current_index + length
+        result.append(image_lines)
+
+    return result

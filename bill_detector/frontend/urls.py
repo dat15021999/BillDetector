@@ -4,6 +4,5 @@ from frontend import views
 
 urlpatterns = [
     path('', views.index),
-    path('x/', views.postRequest),
     url(r'^photos/$', views.imageApi)
 ]

@@ -1,43 +1,114 @@
 import React, { Component } from 'react'
 import ImageContext from '../../contexts/ImageContext'
-import Photo from '../ImageComponent/Image'
+import ClipLoader from "react-spinners/ClipLoader"
+import Tooltip from 'react-simple-tooltip'
+
+let source_images = []
+let name_images = []
+let bills = []
+
+let default_image = {
+    'source': "https://cdn2.iconfinder.com/data/icons/document-34/200/358-512.png",
+    'name': 'Example',
+    'description': "Không phải hóa đơn!",
+    'content': ''
+}
 
 export default class ImageInfo extends Component {
     constructor(props) {
         super(props)
+        this.handleMouseMove = this.handleMouseMove.bind(this)
+        this.inBounding = this.inBounding.bind(this)
+        this.myRef = React.createRef()
     }
 
     recognizeImage(context) {
-        try {
-            fetch('http://127.0.0.1:8000/photos/', {
-                method: 'POST',
-                // body: JSON.stringify({
-                //     "images": context.images
-                // })
-                body: JSON.stringify(context.names)
-            })
-            .then(response => response.json())
-            .then(result => {
-                console.log(result);
-                alert('Ảnh đã được nhận diện!')
-            })
-        } catch (error) {
-            console.log(error)
+        if (context.images.length > 0) {
+            try {
+                context.changeLoadingStatus(true)
+                fetch('http://127.0.0.1:8000/photos/', {
+                    method: 'POST',
+                    body: JSON.stringify(context.images)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    console.log(result);
+                    context.changeLoadingStatus(false)
+                    result[1].forEach(el => {
+                        source_images.push(el.link)
+                        name_images.push(el.title)
+                        bills.push(el.description)
+                    });
+                    context.detectImages(source_images, name_images, result[0], bills)
+                    alert('Ảnh đã được nhận diện!')
+                })
+            } catch (error) {
+                console.log(error)
+            }
         }
+        else {
+            alert('Bạn chưa chọn ảnh!')
+        }
+    }
+
+    inBounding(top, btm, pos) {
+        return pos >= top && pos <= btm
+    }
+
+    handleMouseMove(context, e) {
+        let index = context.current_index
+        let image_top = this.myRef.current.getBoundingClientRect().top
+        let image_height = this.myRef.current.getBoundingClientRect().height
+        
+        context.images_content[index].forEach(el => {
+            let top_line = image_top + image_height * el[2]
+            let btm_line = image_top + image_height * el[1]
+
+            if (this.inBounding(top_line, btm_line, e.clientY)) {
+                context.setTooltipData(el[0])
+            }
+        })
     }
 
     render() {
         return <ImageContext.Consumer>
             {
                 context => <div style={styles.imageInfo}>
-                    <div style={styles.header}>Thong tin</div>
+                    <div style={styles.header}>Thông tin ảnh</div>
                     <div style={styles.imageClicked}>
                         <div style={styles.bigImage}>
-                            <Photo style={styles.imageDisplay} src={context.src} alt={context.name} />
-                            {/* <img className="img-info" style={styles.imageDisplay} src={context.src} alt={context.name}/> */}
+                            {
+                                context.isLoading ? <ClipLoader style={styles.loader} /> : <Tooltip content={context.tooltip_data}>
+                                    <img
+                                        style={styles.imageDisplay}
+                                        src={
+                                            context.current_index == -1 ? default_image['source'] : context.images_source[context.current_index]
+                                        }
+                                        alt={
+                                            context.current_index == -1 ? default_image['name'] : context.images[context.current_index]
+                                        }
+                                        indx={context.current_index}
+                                        description={
+                                            context.current_index == -1 ? default_image['description'] : context.bills[context.current_index]
+                                        }
+                                        content={
+                                            context.current_index == -1 ? default_image['content'] : context.images_content[context.current_index]
+                                        }
+                                        ref={this.myRef}
+                                        onMouseMove={() => {
+                                            this.handleMouseMove(context, event)
+                                        }}
+                                    />
+                                </Tooltip>
+                                
+                            }
                         </div>
-                        <div style={styles.imageDescription}>{context.name}</div>
-                        <div style={styles.imageDescription}>{context.name}</div>
+                        <div style={styles.imageDescription}>
+                            {context.current_index == -1 ? default_image['name'] : context.images[context.current_index]}
+                        </div>
+                        <div style={styles.imageDescription}>
+                            {context.current_index == -1 ? default_image['description'] : context.bills[context.current_index]}
+                        </div>
                     </div>
                     <div style={styles.footer}>
                         <div></div>
@@ -45,9 +116,8 @@ export default class ImageInfo extends Component {
                             style={styles.imageButton}
                             onClick={() => {
                                 this.recognizeImage(context)
-                                context.recognizeImage("https://vnkings.com/wp-content/uploads/2018/04/14_Central_Park_1.jpg")
                             }}
-                        >Nhan dien anh</div>
+                        >Nhận diện ảnh</div>
                         <div></div>
                     </div>
                 </div>
@@ -57,6 +127,11 @@ export default class ImageInfo extends Component {
 }
 
 const styles = {
+    loader: {
+        height: '200',
+        width: '200'
+    },
+
     imageInfo: {
         width: '40%',
         backgroundColor: '#E7E0C9'
@@ -106,14 +181,16 @@ const styles = {
         margin: 'auto',
         width: '100%',
         height: 'auto',
-        maxWidth: '300px',
-        maxHeight: '300px',
+        maxWidth: '350px',
+        maxHeight: '500px',
         minWidth: '150px',
         minHeight: '150px',
     },
 
     imageDescription: {
-        padding: '10px 50px'
+        fontSize: '30',
+        fontWeight: '600',
+        padding: '20px 50px'
     },
 
     imageButton: {
