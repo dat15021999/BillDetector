@@ -48,8 +48,10 @@ export default class ImageProvider extends Component {
         this.setState({
             images: [],
             images_source: [],
-            bills: [],
+            images_content:[],
             current_index: -1,
+            bills: [],
+            isLoading: false
         })
     }
 

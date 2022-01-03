@@ -10,7 +10,7 @@ let bills = []
 let default_image = {
     'source': "https://cdn2.iconfinder.com/data/icons/document-34/200/358-512.png",
     'name': 'Example',
-    'description': "Không phải hóa đơn!",
+    'description': "Không xác định",
     'content': ''
 }
 
@@ -34,12 +34,16 @@ export default class ImageInfo extends Component {
                 .then(result => {
                     console.log(result);
                     context.changeLoadingStatus(false)
+                    console.log(context.images);
                     result[1].forEach(el => {
                         source_images.push(el.link)
                         name_images.push(el.title)
                         bills.push(el.description)
                     });
                     context.detectImages(source_images, name_images, result[0], bills)
+                    source_images = []
+                    name_images = []
+                    bills = []
                     alert('Ảnh đã được nhận diện!')
                 })
             } catch (error) {

@@ -30,8 +30,6 @@ const styles = {
         height: '95%',
         width: '99%',
         position: 'absolute',
-        // left: '5%',
-        // top: '5%',
         display: 'flex',
         backgroundColor: '#ddd'
     }

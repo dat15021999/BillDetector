@@ -70,7 +70,6 @@ def image_process_ocr(images):
 
     return result
 
-
 def isBill(text):
     return 'HOA DON' in text or 'Hoa Don' in text or 'Hoa don' in text or 'hoa don' in text
 
@@ -80,7 +79,6 @@ def url_to_image(url, readFlag=cv.IMREAD_COLOR):
     return cv.imdecode(image, readFlag)
 
 def uploadImage(client, image_path, image_name, description):
-    
     config = {
         'title': image_name,
         'description': description
@@ -98,7 +96,6 @@ def getLineBorder(images):
         current_index = 0
         img = cv.imread(base_path + '/input/' + image)
         height, width, c = img.shape
-        # result.append(pytesseract.image_to_boxes(img))
         lines = pytesseract.image_to_string(img).splitlines()
         coordinates = pytesseract.image_to_boxes(img).splitlines()
         # print(lines)
