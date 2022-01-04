@@ -26,7 +26,9 @@ def imageApi(request):
         images = json.loads(body_unicode)
         result = []
 
-        texts = image_process_ocr(images)
+        # texts = image_process_ocr(images)
+        a = getLineBorder(images)
+        texts = a[0]
         start = time.time()
         print('Detecting...')
         for i in range(len(images)):
@@ -42,7 +44,8 @@ def imageApi(request):
         print('Tổng thời gian:', end - start, 's trên {} yêu cầu'.format(len(images)))
         return JsonResponse(
             [
-                getLineBorder(images),
+                a[1],
+                # getLineBorder(images),
                 result
             ],
             safe=False
@@ -50,7 +53,6 @@ def imageApi(request):
 
 def image_process_ocr(images):
     result = []
-
     removeFilesInPath(base_path + "/output")
 
     for image in images:
@@ -91,10 +93,13 @@ def removeFilesInPath(mydir):
         os.remove(os.path.join(mydir, f))
 
 def getLineBorder(images):
+    removeFilesInPath(base_path + "/output")
     result = []
+    result_img = []
     for image in images:
         current_index = 0
         img = cv.imread(base_path + '/input/' + image)
+        result_img.append(pytesseract.image_to_string(img))
         height, width, c = img.shape
         lines = pytesseract.image_to_string(img).splitlines()
         coordinates = pytesseract.image_to_boxes(img).splitlines()
@@ -112,6 +117,8 @@ def getLineBorder(images):
                 start_char = coordinates[current_index].split(' ')
                 end_char = coordinates[current_index + length - 1].split(' ')
 
+                cv.rectangle(img, (int(start_char[1]), height - int(start_char[2])), (int(end_char[3]), height - int(end_char[4])), (0, 255, 0), 1)
+
                 floor = start_char[2] if start_char[2] < end_char[2] else end_char[2]
                 floor = 1 - int(floor)/height
 
@@ -124,6 +131,7 @@ def getLineBorder(images):
 
                 image_lines.append(current_line)
                 current_index = current_index + length
+        cv.imwrite(os.path.join(base_path + '/output/', image), img)
         result.append(image_lines)
 
-    return result
+    return [result_img, result]

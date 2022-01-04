@@ -3,6 +3,7 @@ import { render } from "react-dom"
 import ImageInfo from './image_info/ImageInfo'
 import ImageUploader from './images_loader/ImageUploader'
 import ImageProvider from './providers/ImageProvider'
+import NavigationBar from './navigation_bar/NavigationBar'
 
 export default class App extends Component {
     constructor(props) {
@@ -11,6 +12,7 @@ export default class App extends Component {
 
     render() {
         return <div style={styles.mainLayout}>
+                <NavigationBar />
                 <div style={styles.content}>
                     <ImageProvider>
                         <ImageUploader />
@@ -23,11 +25,12 @@ export default class App extends Component {
 
 const styles = {
     mainLayout: {
-        height: '100%'
+        height: '100%',
+        backgroundColor: '#fcfbf5'
     },
 
     content: {
-        height: '95%',
+        height: '90%',
         width: '99%',
         position: 'absolute',
         display: 'flex',
